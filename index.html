@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101727"><title>Chain Reaction · Prototipo 0.7.2</title><style>
+:root{color-scheme:dark;--bg:#101727;--panel:#19243a;--tile:#26354b;--text:#f4f7ff;--muted:#98abc5;--blue:#45a6f0;--violet:#ac8bfb;--orange:#ffae55}*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% 0,#253455 0,#101727 65%);color:var(--text);font:500 16px system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}main{max-width:550px;margin:auto;min-height:100dvh;padding:calc(22px + env(safe-area-inset-top)) 16px calc(22px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:18px}.top{display:flex;justify-content:space-between;align-items:center}.brand{font-size:12px;letter-spacing:.22em;color:var(--muted);font-weight:800}.level{font-size:30px;font-weight:800;letter-spacing:-.04em;margin-top:3px}.pill{background:#293850;color:#bcd2ec;padding:8px 13px;border-radius:99px;font-size:13px}.subtitle{color:#bdcde0;line-height:1.4;margin:0;text-align:center}.boardWrap{background:#18253b;border:1px solid #334766;border-radius:24px;padding:clamp(10px,3vw,20px);box-shadow:0 15px 60px #0005;position:relative}.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(5px,1.7vw,10px);aspect-ratio:1}.cell{background:#233149;border:1px solid #34445e;border-radius:clamp(8px,2.5vw,14px);display:grid;place-items:center;position:relative;min-width:0;min-height:0}.piece{width:86%;height:86%;border:0;border-radius:22%;display:grid;place-items:center;box-shadow:inset 0 2px 2px #fff3,0 5px 12px #0004;cursor:pointer;color:#fff;touch-action:manipulation;transition:transform .15s ease,opacity .17s ease,filter .15s}.piece:active{transform:scale(.92)}.piece:focus-visible{outline:3px solid white;outline-offset:3px}.line{background:linear-gradient(145deg,#60bfff,#2d7fd4)}.double{background:linear-gradient(145deg,#c9a5ff,#8664ce)}.bomb{background:linear-gradient(145deg,#ffc77b,#ef8738)}.piece svg{width:70%;height:70%;filter:drop-shadow(0 2px 2px #0002)}.piece.activating{animation:ignite .32s ease-in-out forwards}.piece.done{opacity:0;transform:scale(.1);pointer-events:none}.cell.flash:after{content:"";position:absolute;inset:0;border-radius:inherit;border:2px solid #fff7;animation:flash .35s ease-out;pointer-events:none}@keyframes ignite{0%{transform:scale(1);filter:brightness(1)}55%{transform:scale(1.15);filter:brightness(1.8)}100%{transform:scale(.08);opacity:0}}@keyframes flash{from{opacity:1}to{opacity:0}}.status{text-align:center;min-height:52px;display:grid;place-items:center;font-size:17px;font-weight:750}.status small{font-size:13px;display:block;color:#aabed7;margin-top:5px;font-weight:500}.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}button.action{background:#2b3d57;color:#f7faff;border:1px solid #435a79;border-radius:14px;padding:12px 17px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation}button.action.primary{background:#54aaf4;color:#07182b;border-color:#74bfff}button:disabled{opacity:.4;cursor:not-allowed}.progress{display:grid;grid-template-columns:repeat(10,26px);justify-content:center;margin:0 auto}.dot{width:26px;height:26px;padding:0;border:0;border-radius:50%;background:none;display:grid;place-items:center;cursor:pointer;touch-action:manipulation}.dot:disabled{opacity:1;cursor:default}.dot:before{content:"";width:10px;height:10px;background:#40536c;border-radius:100%}.dot.on:before{background:#75c9ff}.dot.current:before{outline:2px solid #edf8ff;outline-offset:3px}.dot:focus-visible{outline:2px solid #edf8ff;outline-offset:-2px}.how{border:1px solid #34445d;border-radius:17px;padding:13px 16px;background:#18253a}.how summary{cursor:pointer;font-weight:750}.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px}.legendItem{display:flex;flex-direction:column;align-items:center;gap:7px;color:#c7d6e9;font-size:12px;text-align:center}.mini{height:32px;width:32px;border-radius:9px;display:grid;place-items:center;color:white;font-size:19px}.foot{font-size:12px;color:#7791b1;text-align:center;margin-top:auto} @media(min-width:600px){main{padding-top:32px}.boardWrap{padding:20px}}
+
+/* 0.2 · motion design */
+.boardWrap{overflow:hidden;isolation:isolate;background:radial-gradient(circle at 50% 40%,#243752,#152339 85%)}
+.cell{background:#202e44;transition:background .18s ease}
+.cell.flash{background:#364f70}.cell.flash:after{z-index:4}
+.piece{position:relative;z-index:2;transition:transform .18s,filter .18s,opacity .2s;will-change:transform,opacity}
+.piece.primed{animation:prime .23s ease-out infinite alternate;filter:brightness(1.38) drop-shadow(0 0 12px #fff7)}
+.piece.activating{animation:ignite02 .32s ease-in forwards}
+.piece.done{visibility:hidden;opacity:0;pointer-events:none}
+@keyframes prime{from{transform:scale(1)}to{transform:scale(1.09)}}
+@keyframes ignite02{0%{transform:scale(1);opacity:1;filter:brightness(1.5)}42%{transform:scale(1.27);opacity:1;filter:brightness(2.5)}100%{transform:scale(.15);opacity:0}}
+.fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:6}
+.fx .trail{stroke-linecap:round;stroke-width:4;fill:none;filter:drop-shadow(0 0 4px currentColor)}
+.fx .beamHead{filter:drop-shadow(0 0 8px currentColor)}
+.particle{position:absolute;width:7px;height:7px;background:#fff;border-radius:50%;pointer-events:none;z-index:9;box-shadow:0 0 10px currentColor}
+.status{font-variant-numeric:tabular-nums}
+.boardWrap:has(.fx.active){box-shadow:0 14px 70px #0b244a}
+.topNote{color:#8faccf;font-size:12px;text-align:center}
+/* Game effect visibility follows in-game pacing, not OS reduced-motion. */
+.paceControl{display:flex;justify-content:center;align-items:center;gap:12px;color:#bcd2ec;font-size:13px}.paceControl .action{font-size:13px;padding:8px 12px}.fx{display:block!important;opacity:1!important}
+/* 0.3 — tactile polish */
+.cell{overflow:visible}.piece{transform-origin:center;}
+.impactRing{position:absolute;left:50%;top:50%;width:14%;aspect-ratio:1;border:3px solid var(--fx-color,#fff);border-radius:50%;z-index:8;pointer-events:none;transform:translate(-50%,-50%) scale(.35);animation:ringPop .48s cubic-bezier(.16,.8,.25,1) forwards;box-shadow:0 0 12px var(--fx-color,#fff)}
+@keyframes ringPop{0%{opacity:1;transform:translate(-50%,-50%) scale(.35)}100%{opacity:0;transform:translate(-50%,-50%) scale(8)}}
+.spark{position:absolute;left:50%;top:50%;height:5px;width:5px;z-index:10;border-radius:50%;background:var(--fx-color,#fff);box-shadow:0 0 10px var(--fx-color,#fff);pointer-events:none;animation:sparkFly .56s cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes sparkFly{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.1);opacity:0}}
+.victoryFlash{position:absolute;inset:0;pointer-events:none;z-index:11;opacity:0;background:radial-gradient(circle at center,#c4eaff85 0%,#78bfff18 44%,transparent 70%);animation:victoryPulse 1s ease-out forwards}
+@keyframes victoryPulse{0%{opacity:0;transform:scale(.4)}35%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.35)}}
+.status.win{color:#a9e6ff;text-shadow:0 0 16px #69bdff88;animation:winText .8s ease-out}
+@keyframes winText{0%{transform:scale(.9);opacity:.35}65%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+#replay[hidden],#sound[hidden]{display:none!important}
+.soundRow{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}.soundRow .action{font-size:13px;padding:8px 12px}
+@media(prefers-reduced-motion:reduce){.spark,.impactRing,.victoryFlash{animation-duration:.15s}}
+
+/* 0.4: anticipation, laser impacts and in-board outcomes */
+.boardWrap{position:relative}
+.piece.charging{animation:chargeGlow .18s ease-in-out infinite alternate!important;box-shadow:0 0 8px #fff8,0 0 23px #78d9ff,inset 0 0 18px #fff5!important}
+@keyframes chargeGlow{from{transform:scale(.98) rotate(-2deg);filter:brightness(1.15)}to{transform:scale(1.14) rotate(2deg);filter:brightness(2.2)}}
+.chargeHalo{position:absolute;left:50%;top:50%;width:40%;height:40%;transform:translate(-50%,-50%);border-radius:50%;border:3px solid #b1edff;box-shadow:0 0 18px #6acbff;pointer-events:none;animation:chargePulse 1.16s ease-in forwards;z-index:8}
+@keyframes chargePulse{from{opacity:.18;scale:.6}70%{opacity:.95}to{opacity:0;scale:2.3}}
+.cell.survivor .piece{animation:survivorShake .53s ease-in-out 2}
+@keyframes survivorShake{0%,100%{transform:translateX(0)}15%,45%,75%{transform:translateX(-4px) rotate(-4deg)}30%,60%,90%{transform:translateX(4px) rotate(4deg)}}
+.finalBurst{position:absolute;left:50%;top:50%;width:20px;height:20px;z-index:12;pointer-events:none;border:4px solid #fff;border-radius:50%;box-shadow:0 0 26px 16px #78d9ff,0 0 65px #fff;transform:translate(-50%,-50%);animation:finalBurst .85s ease-out forwards}
+@keyframes finalBurst{0%{opacity:1;scale:.2}55%{opacity:1;scale:4.3}100%{opacity:0;scale:8}}
+.endOverlay[hidden]{display:none!important}
+.endOverlay{position:absolute;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:9px;background:rgba(12,20,36,.82);backdrop-filter:blur(5px);border-radius:22px;animation:overlayIn .37s ease-out;padding:15px}
+.endOverlay.fail{background:rgba(12,20,36,.56);backdrop-filter:blur(2px)}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+.resultSymbol{font-size:35px;text-shadow:0 0 18px #7bddff}.resultTitle{font-weight:900;letter-spacing:.1em;font-size:clamp(25px,7vw,42px);color:#c0eeff;text-shadow:0 0 20px #4ca9ff}
+.endOverlay.fail .resultTitle{color:#ffe1ac;text-shadow:0 0 12px #ffb95455}
+.resultDetail{max-width:270px;font-size:14px;line-height:1.45;color:#dae8f8}
+.overlayButton{margin-top:13px;border:0;background:linear-gradient(135deg,#75d5ff,#4596ed);padding:13px 22px;border-radius:13px;color:#071b33;font-weight:850;font-size:16px;cursor:pointer}
+.endOverlay.fail .overlayButton{background:#ffc17a;color:#37200d}
+/* Preserve animations in the game; make sure result is legible on narrow screens. */
+@media(max-width:370px){.twistControls .action{font-size:11px;padding:7px}} .prefsHidden{display:none!important}
+
+.topPanel{display:flex;flex-direction:column;gap:10px}.twistControls{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#26344b;border:1px solid #54657d;border-radius:14px;padding:10px 12px;font-size:13px;color:#d7e3f3}
+.twistControls[hidden]{display:none!important}
+.twistControls button{font-size:12px;padding:10px!important;flex-shrink:0}
+.piece.rotatable{outline:3px solid #ffd576;outline-offset:3px;box-shadow:0 0 0 6px #fcbf4533,inset 0 2px 2px #fff3,0 0 20px #ffd36d40}
+.cell .rotLabel{position:absolute;right:-2px;top:-5px;z-index:5;background:#ffda88;color:#3a280d;border-radius:12px;padding:2px 5px;font-size:12px;font-weight:900;pointer-events:none}
+.piece.rotatable:active{transform:scale(.95)}
+
+/* Two-step twist interaction */
+.twistControls{gap:12px;flex-wrap:wrap}.twistControls #phaseHint{flex:1;min-width:155px}.twistControls .action{min-height:46px}.piece.rotatable{border:2px solid #f4cd67}.piece.rotatable:focus-visible{outline:3px solid white}.piece:disabled{cursor:default}
+
+/* 0.7.2 - first-play onboarding */
+main{gap:12px;padding-top:calc(14px + env(safe-area-inset-top))}
+.topPanel{gap:9px}.levelAdvance{font-size:12px;font-weight:650;color:#9fb6d5;margin-top:4px}
+.objective{display:flex;gap:9px;align-items:center;border:1px solid #3d6589;background:#1c324b;border-radius:13px;padding:10px 12px;color:#d9ecff;font-size:13px;line-height:1.35}
+.objective strong{font-size:11px;letter-spacing:.08em;color:#81d4ff}.objectiveIcon{font-size:22px;line-height:1;color:#8de4ff}
+.subtitle{text-align:left;font-size:14px;line-height:1.35}
+.boardWrap{position:relative}
+.piece.firstPlayTarget{outline:3px solid #b8f5ff;outline-offset:3px;animation:firstPlayGlow 1.1s ease-in-out infinite alternate;box-shadow:0 0 12px #baf1ff80,inset 0 1px 3px #fff5}
+@keyframes firstPlayGlow{from{filter:brightness(1);transform:scale(.98)}to{filter:brightness(1.5);transform:scale(1.06)}}
+.teachingBubble{position:absolute;left:10px;right:10px;top:8px;z-index:7;pointer-events:none;text-align:center;color:#e5faff;font-size:13px;font-weight:750;text-shadow:0 2px 5px #000a}
+.teachingBubble[hidden]{display:none!important}
+@media(max-width:370px){.objective{font-size:12px;padding:8px 10px}.subtitle{font-size:13px}main{gap:9px}}
+</style></head><body><main><header class="top"><div><div class="brand">CHAIN REACTION</div><div class="level" id="levelTitle">Nivel 01</div><div class="levelAdvance" id="levelAdvance">Nivel 1 de 20</div></div><div class="pill" id="pieceCount">0 piezas</div></header><div class="topPanel"><div class="objective"><span class="objectiveIcon">◎</span><span><strong>OBJETIVO</strong> · Elimina todas las piezas con una sola reacción</span></div><p class="subtitle" id="instruction">Toca una pieza y limpia todo el tablero con una sola reacción.</p><div class="twistControls" id="twistControls" hidden><span id="phaseHint">↻ Preparar: toca las piezas doradas para girarlas.</span><button type="button" class="action primary" id="phaseButton">¡Estoy listo! →</button></div></div><section class="boardWrap"><div class="teachingBubble" id="teachingBubble" hidden><span id="teachingText"></span></div><div class="board" id="board" aria-label="Tablero de juego"></div><svg class="fx" id="fx" aria-hidden="true"></svg><div class="endOverlay" id="endOverlay" hidden aria-live="polite"><div class="resultSymbol" id="resultSymbol">✦</div><div class="resultTitle" id="resultTitle"></div><div class="resultDetail" id="resultDetail"></div><button type="button" class="overlayButton" id="overlayAction"></button></div></section><div class="prefsHidden" aria-hidden="true"><button type="button" id="paceButton" class="action">Lenta · visible</button><button type="button" id="haptic" class="action" aria-pressed="true">◉ Vibración: activa</button></div><div class="status" id="status" aria-live="polite">Elige una pieza para comenzar</div><div class="progress" id="progress" role="group" aria-label="Niveles"></div><div class="controls"><button class="action" id="retry">↻ Reiniciar</button><button class="action" id="replay" hidden>▶ Repetir reacción</button><button class="action" id="prev">← Anterior</button><button class="action primary" id="next" hidden>Siguiente nivel →</button></div><div class="soundRow"><button type="button" id="sound" class="action" aria-pressed="true">♫ Sonido: encendido</button></div><details class="how"><summary>¿Cómo se juega?</summary><div class="legend"><div class="legendItem"><div class="mini line">➜</div><span>Flecha: dispara hacia adelante</span></div><div class="legendItem"><div class="mini double">↔</div><span>Doble: dispara en dos sentidos</span></div><div class="legendItem"><div class="mini bomb">✺</div><span>Bomba: cuatro direcciones</span></div></div><p style="color:#b9cbdf;font-size:13px;line-height:1.6;margin-bottom:0">Cada disparo cruza las casillas vacías y activa la primera pieza que encuentra. Cada pieza se activa una sola vez. Si desaparecen todas, ganas. ¡Puedes reintentar sin límite!</p></details><footer class="foot">Prototipo 0.7.2 · 20 niveles · Sin anuncios ni cuentas</footer></main><script>
+'use strict';
+// Engine from 0.1: first piece found along each ray; one activation per piece.
+const STEPS=[[1,0],[0,1],[-1,0],[0,-1]];
+const P=(x,y,t,d=0)=>({x,y,t,d});
+const levels=[
+ {title:'Primer destello',hint:'Una pieza puede activar otra a distancia.',pieces:[P(0,2,'line',0),P(2,2,'line',0),P(4,2,'line',0)]},
+ {title:'El punto de partida',hint:'No todas las piezas son un buen comienzo.',pieces:[P(0,0,'line',0),P(2,0,'line',1),P(2,2,'line',0),P(4,2,'line',3)]},
+ {title:'Dos direcciones',hint:'La pieza morada puede activar dos caminos.',pieces:[P(2,2,'double',0),P(0,2,'line',3),P(4,2,'line',3),P(0,0,'line',0),P(4,0,'line',2)]},
+ {title:'Efecto dominó',hint:'Busca una pieza que pueda alimentar dos ramas.',pieces:[P(2,2,'double',1),P(2,0,'line',0),P(2,4,'line',2),P(4,0,'line',1),P(0,4,'line',3),P(4,3,'line',2),P(0,1,'line',0)]},
+ {title:'La gran explosión',hint:'La bomba naranja activa una pieza en cada dirección.',pieces:[P(2,2,'bomb'),P(0,2,'line',3),P(4,2,'line',1),P(2,0,'double',0),P(2,4,'double',0),P(0,0,'line',1),P(4,0,'line',1),P(0,4,'line',0),P(4,4,'line',2)]},
+ {title:"Primer giro",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:1,pieces:[P(4,4,'line',3),P(0,0,'line',0),P(3,0,'line',2),P(4,1,'bomb',3),P(3,3,'double',1),P(0,4,'double',0)]},
+ {title:"La vuelta correcta",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:2,pieces:[P(4,4,'line',0),P(1,4,'line',0),P(4,2,'line',0),P(1,0,'line',0),P(1,2,'double',3)]},
+ {title:"Cambio de planes",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:6,pieces:[P(0,4,'line',0),P(1,2,'line',1),P(1,1,'line',2),P(2,4,'line',2),P(2,3,'line',1),P(0,1,'line',1),P(0,2,'line',3),P(1,3,'line',0)]},
+ {title:"Dirección sorpresa",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:5,pieces:[P(1,2,'line',2),P(4,1,'line',2),P(2,4,'double',1),P(1,1,'double',2),P(4,2,'bomb',3),P(2,2,'line',1),P(4,4,'line',2),P(1,4,'line',3)]},
+ {title:"Cruce preciso",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:6,pieces:[P(2,3,'line',0),P(1,2,'double',3),P(1,1,'double',1),P(4,3,'double',3),P(3,3,'double',2),P(1,0,'line',3),P(2,1,'line',0),P(3,2,'line',1),P(2,2,'double',0)]},
+ {title:"La flecha clave",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:4,pieces:[P(0,3,'line',2),P(0,1,'double',2),P(4,3,'line',2),P(1,1,'double',1),P(3,3,'line',3),P(2,0,'bomb',0),P(1,0,'line',0),P(1,2,'line',1),P(4,0,'double',1)]},
+ {title:"Giro estratégico",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:7,pieces:[P(1,0,'line',3),P(3,3,'bomb',1),P(3,0,'double',2),P(2,2,'line',0),P(2,4,'double',2),P(0,4,'line',1),P(2,3,'double',3),P(2,0,'line',3)]},
+ {title:"Camino oculto",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:7,pieces:[P(3,3,'bomb',1),P(2,4,'line',2),P(4,3,'double',3),P(1,0,'line',3),P(1,3,'double',1),P(2,0,'line',0),P(2,2,'double',1),P(4,2,'line',0),P(4,0,'line',1)]},
+ {title:"Un solo ajuste",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:7,pieces:[P(3,1,'bomb',0),P(4,2,'line',1),P(3,0,'double',2),P(0,3,'line',2),P(3,3,'double',0),P(0,2,'line',3),P(2,2,'double',0),P(2,0,'line',3),P(0,0,'line',0)]},
+ {title:"Antes de disparar",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:5,pieces:[P(2,1,'double',0),P(2,0,'line',2),P(2,3,'double',3),P(1,2,'line',2),P(1,1,'double',1),P(0,3,'line',3),P(0,2,'double',1),P(1,0,'line',0),P(2,2,'line',0)]},
+ {title:"La ruta inversa",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:7,pieces:[P(4,4,'line',2),P(4,2,'double',1),P(4,1,'double',0),P(3,3,'line',3),P(0,4,'line',0),P(0,1,'double',3),P(1,3,'line',3),P(3,4,'line',0),P(0,0,'double',3),P(1,4,'line',3),P(1,0,'line',0),P(4,3,'line',1)]},
+ {title:"Sigue la chispa",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:0,pieces:[P(4,2,'line',3),P(0,3,'line',3),P(4,0,'line',1),P(3,1,'bomb',2),P(0,0,'line',0),P(0,4,'line',3),P(2,1,'line',3),P(2,4,'line',2),P(3,4,'double',2),P(4,3,'double',3)]},
+ {title:"Pieza decisiva",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:6,pieces:[P(2,0,'line',1),P(1,2,'double',3),P(0,3,'double',1),P(1,1,'line',3),P(3,0,'line',2),P(4,3,'line',2),P(3,3,'line',1),P(1,0,'double',3),P(1,4,'double',3),P(2,1,'double',3),P(2,4,'double',2),P(4,0,'bomb',3)]},
+ {title:"El último desvío",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:7,pieces:[P(3,3,'line',3),P(4,0,'line',3),P(3,1,'double',2),P(0,3,'double',2),P(4,3,'line',3),P(2,4,'double',0),P(0,0,'line',1),P(4,1,'line',0),P(2,0,'bomb',0),P(3,4,'double',3),P(1,4,'line',1)]},
+ {title:"Reacción maestra",hint:'Gira la pieza con aro dorado y elige dónde iniciar.',rotIndex:12,pieces:[P(0,0,'double',3),P(2,0,'double',2),P(3,3,'double',0),P(1,0,'line',2),P(4,4,'line',2),P(2,4,'line',0),P(3,1,'line',1),P(1,4,'line',0),P(4,2,'bomb',1),P(1,2,'double',1),P(3,0,'line',1),P(2,2,'line',2),P(4,3,'line',2)]}
+];
+function exits(p){return p.t==='line'?[p.d]:p.t==='double'?[p.d,(p.d+2)%4]:[0,1,2,3]}
+// Sequence of simultaneous ignition waves with each actual path and direction.
+function simulate(pieces,start){
+ const byPos=new Map(pieces.map((p,i)=>[`${p.x},${p.y}`,i]));
+ const done=new Set();let wave=[start],sequence=[];
+ while(wave.length){
+  wave=[...new Set(wave)].filter(i=>!done.has(i));
+  if(!wave.length)break;
+  for(const i of wave)done.add(i);
+  const paths=[],next=new Set();
+  for(const i of wave){const p=pieces[i];for(const dir of exits(p)){
+   let x=p.x,y=p.y,hit=null;
+   while(true){x+=STEPS[dir][0];y+=STEPS[dir][1];if(x<0||y<0||x>4||y>4)break;
+    let target=byPos.get(`${x},${y}`);
+    if(target!==undefined&&!done.has(target)){hit=target;break}
+   }
+   if(hit!==null){paths.push({from:i,to:hit,dir});if(!done.has(hit))next.add(hit)}
+   else {let endX=p.x,endY=p.y;while(endX+STEPS[dir][0]>=0&&endX+STEPS[dir][0]<=4&&endY+STEPS[dir][1]>=0&&endY+STEPS[dir][1]<=4){endX+=STEPS[dir][0];endY+=STEPS[dir][1]}
+     paths.push({from:i,to:null,dir,endX,endY});}
+  }}
+  sequence.push({activated:wave,paths});wave=[...next];
+ }
+ return{sequence,count:done.size,won:done.size===pieces.length};
+}
+const checks=levels.map(l=>{if(l.rotIndex===undefined)return l.pieces.map((_,i)=>simulate(l.pieces,i)).filter(r=>r.won).length;let count=0;for(let d=0;d<4;d++){const p=l.pieces.map(x=>({...x}));p[l.rotIndex].d=d;for(let i=0;i<p.length;i++)if(simulate(p,i).won)count++}return count});
+if(checks.some(n=>n!==1))console.warn('Hay niveles sin una única solución',checks);
+let currentPieces=[],currentRot=0,lastRot=0,phase='prepare';
+let levelIndex=0,busy=false,finished=false,epoch=0,maxUnlocked=0,active=new Set(),timers=[],lastStart=null,soundOn=true,audioCtx=null;
+try{maxUnlocked=Math.max(0,Math.min(levels.length-1,Number(localStorage.getItem('chain-reaction-unlocked')||0)||0));soundOn=localStorage.getItem('chain-reaction-sound')!=='off'}catch(e){}
+levelIndex=maxUnlocked;
+const board=document.getElementById('board'),fx=document.getElementById('fx'),status=document.getElementById('status'),count=document.getElementById('pieceCount'),wrap=document.querySelector('.boardWrap');
+const reduceMotion=false; // Beam animation stays enabled.
+let pace=1.5,hapticOn=true;const overlay=document.getElementById('endOverlay');
+function buzz(pattern){if(hapticOn&&navigator.vibrate){try{navigator.vibrate(pattern)}catch(e){}}}
+function dismissOverlay(){overlay.hidden=true;overlay.classList.remove('fail')}
+function showOverlay(won,remain){overlay.classList.toggle('fail',!won);document.getElementById('resultSymbol').textContent=won?'✦':'↯';document.getElementById('resultTitle').textContent=won?`¡NIVEL ${levelIndex+1} SUPERADO!`:'¡CASI!';document.getElementById('resultDetail').textContent=won?`¡Bien hecho! Avanzaste ${Math.min(levelIndex+1,levels.length)} de ${levels.length} niveles.`:`Quedaron ${remain} ${remain===1?'pieza':'piezas'} sin activar. ¡Prueba otra!`;const b=document.getElementById('overlayAction');b.textContent=won&&levelIndex<levels.length-1?'Siguiente nivel →':won?'Repetir reacción ↻':'Volver a intentar ↻';b.onclick=()=>{if(won&&levelIndex<levels.length-1){levelIndex++;lastStart=null;render()}else if(won){const start=lastStart,rot=lastRot;render();restoreRotation(rot);play(start)}else{lastStart=null;render()}};overlay.hidden=false}
+function finalEffect(indices,pieces){for(const i of indices){const el=tile(i);if(!el)continue;const cell=el.parentElement;const burst=document.createElement('span');burst.className='finalBurst';cell.append(burst);burst.addEventListener('animationend',()=>burst.remove(),{once:true});impact(i,pieces)}}
+
+const icons={line:'<path d="M17 32H47M36 20L48 32L36 44"/>',double:'<path d="M12 32H52M24 20L12 32L24 44M40 20L52 32L40 44"/>',bomb:'<circle cx="32" cy="32" r="8" fill="white" stroke="none"/><path d="M32 8V18M32 46V56M8 32H18M46 32H56M15 15L22 22M42 42L49 49M49 15L42 22M22 42L15 49"/>'};
+function clearTimers(){timers.forEach(clearTimeout);timers=[]}
+function audio(){try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return null;if(!audioCtx)audioCtx=new Ctx();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx}catch(e){return null}}
+function sweep(f1,f2,duration,kind='sawtooth',volume=.10){if(!soundOn)return;try{const ctx=audio();if(!ctx)return;const t=ctx.currentTime,o=ctx.createOscillator(),f=ctx.createBiquadFilter(),g=ctx.createGain();o.type=kind;o.frequency.setValueAtTime(Math.max(35,f1),t);o.frequency.exponentialRampToValueAtTime(Math.max(35,f2),t+duration);f.type='lowpass';f.frequency.setValueAtTime(2400,t);f.frequency.exponentialRampToValueAtTime(500,t+duration);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(volume,t+.014);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(f);f.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+duration+.02)}catch(e){}}
+function laser(step=0,kind='line'){const growth=Math.min(step,11);sweep(940+growth*95,155+growth*18,kind==='bomb'?.34:.23,kind==='bomb'?'square':'sawtooth',.065+Math.min(growth*.003,.03))}
+function chargeSound(){sweep(155,770,.95,'triangle',.065)}
+function winSound(){sweep(180,890,.65,'sawtooth',.10);const t=setTimeout(()=>sweep(390,1080,.55,'triangle',.075),170);timers.push(t)}
+function failSound(){sweep(480,100,.58,'triangle',.075);const t=setTimeout(()=>sweep(180,75,.26,'sine',.05),235);timers.push(t)}
+
+function impact(i,pieces){
+ const el=tile(i);if(!el)return;
+ const cell=el.parentElement,tint=pieces[i].t==='line'?'#65cfff':pieces[i].t==='double'?'#cf9bff':'#ffc477';
+ const ring=document.createElement('span');ring.className='impactRing';ring.style.setProperty('--fx-color',tint);cell.append(ring);
+ ring.addEventListener('animationend',()=>ring.remove(),{once:true});
+ for(let j=0;j<9;j++){
+  const a=(j*40+12)*Math.PI/180,dist=20+(j%3)*7;
+  const spark=document.createElement('span');spark.className='spark';spark.style.setProperty('--fx-color',tint);
+  spark.style.setProperty('--dx',`${Math.cos(a)*dist}px`);spark.style.setProperty('--dy',`${Math.sin(a)*dist}px`);
+  cell.append(spark);spark.addEventListener('animationend',()=>spark.remove(),{once:true});
+ }
+}
+function celebrate(){
+ const flash=document.createElement('div');flash.className='victoryFlash';wrap.append(flash);
+ flash.addEventListener('animationend',()=>flash.remove(),{once:true});
+ status.classList.remove('win');void status.offsetWidth;status.classList.add('win');
+ winSound();buzz([35,45,75])
+}
+
+function sleep(ms,id){return new Promise(resolve=>{const t=setTimeout(()=>resolve(id===epoch),ms*pace);timers.push(t)})}
+function setStatus(msg,sub=''){status.innerHTML='';const div=document.createElement('div');div.textContent=msg;if(sub){const s=document.createElement('small');s.textContent=sub;div.append(s)}status.append(div)}
+function tile(i){return board.querySelector(`[data-index="${i}"]`)}
+function paintRotatable(){
+ const ri=levels[levelIndex].rotIndex;
+ if(ri===undefined)return;
+ const btn=tile(ri);if(!btn)return;
+ const p=currentPieces[ri];
+ btn.innerHTML=`<svg viewBox="0 0 64 64" role="presentation" aria-hidden="true"><g transform="rotate(${p.d*90} 32 32)" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">${icons[p.t]}</g></svg>`;
+}
+function turnRotatable(){if(busy||finished||phase!=='prepare')return;const ri=levels[levelIndex].rotIndex;if(ri===undefined)return;currentRot=(currentRot+1)%4;currentPieces[ri].d=currentRot;paintRotatable();setStatus('Orientación modificada','Pulsa «¡Estoy listo!» cuando quieras probar tu solución')}
+function render(){
+ epoch++;clearTimers();busy=false;finished=false;phase='prepare';active=new Set();status.classList.remove('win');dismissOverlay();
+ document.querySelectorAll('.chargeHalo,.finalBurst,.victoryFlash').forEach(e=>e.remove());fx.replaceChildren();fx.classList.remove('active');
+ const l=levels[levelIndex];currentPieces=l.pieces.map(p=>({...p}));currentRot=l.rotIndex===undefined?0:currentPieces[l.rotIndex].d;
+ document.getElementById('levelTitle').textContent=`Nivel ${String(levelIndex+1).padStart(2,'0')}`;
+ document.getElementById('levelAdvance').textContent=`Nivel ${levelIndex+1} de ${levels.length}`;
+ const onboarding=[
+  'PASO 1 · Toca la pieza que brilla. Mira cómo el rayo activa las demás.',
+  'PASO 2 · Las flechas muestran hacia dónde sale la energía.',
+  'PASO 3 · La pieza morada dispara en dos direcciones.',
+  'PASO 4 · Solo puedes empezar desde una pieza: piensa cuál.',
+  'PASO 5 · La bomba naranja lanza energía en cuatro direcciones.'
+ ];
+ document.getElementById('instruction').textContent=levelIndex<5?onboarding[levelIndex]:'↻ Toca Twist para girarla; pulsa «¡Estoy listo!» y luego elige desde dónde disparar.';
+ document.getElementById('twistControls').hidden=l.rotIndex===undefined;updatePhaseUI();
+ board.innerHTML='';const lookup=new Map(currentPieces.map((p,i)=>[`${p.x},${p.y}`,{p,i}]));
+ for(let y=0;y<5;y++)for(let x=0;x<5;x++){
+  const cell=document.createElement('div');cell.className='cell';const thing=lookup.get(`${x},${y}`);
+  if(thing){const {p,i}=thing;const btn=document.createElement('button');btn.className=`piece ${p.t}${i===l.rotIndex&&phase==='prepare'?' rotatable':''}`;
+   btn.dataset.index=i;if(levelIndex===0&&i===0)btn.classList.add('firstPlayTarget');btn.setAttribute('aria-label',i===l.rotIndex?'Girar pieza destacada 90 grados':`Activar pieza ${p.t}, fila ${y+1}, columna ${x+1}`);
+   btn.innerHTML=`<svg viewBox="0 0 64 64" role="presentation" aria-hidden="true"><g transform="rotate(${p.t==='bomb'?0:p.d*90} 32 32)" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none">${icons[p.t]}</g></svg>`;
+   btn.addEventListener('click',()=>{if(l.rotIndex===undefined){play(i);return;}if(phase==='prepare'){if(i===l.rotIndex)turnRotatable();}else play(i)});cell.append(btn);
+   if(i===l.rotIndex){const tag=document.createElement('span');tag.className='rotLabel';tag.textContent='↻';cell.append(tag)}
+  }board.append(cell)
+ }
+ count.textContent=`${currentPieces.length} piezas`;
+ const teach=document.getElementById('teachingBubble');teach.hidden=levelIndex!==0;document.getElementById('teachingText').textContent='↓ EMPIEZA TOCANDO LA PIEZA ILUMINADA';
+ setStatus(l.rotIndex===undefined?(levelIndex===0?'¡Tu primer disparo!':'Elige una pieza para comenzar'):'Prepara tu reacción',l.rotIndex===undefined?(levelIndex===0?'Toca la pieza iluminada para comenzar':'Toca la pieza que creas correcta'):'Gira la pieza dorada y pulsa «¡Estoy listo!»');
+ document.getElementById('next').hidden=levelIndex>=maxUnlocked;document.getElementById('replay').hidden=lastStart===null;
+ document.getElementById('prev').disabled=levelIndex===0;
+ renderProgress();
+}
+function renderProgress(){
+ const prog=document.getElementById('progress');prog.innerHTML='';
+ levels.forEach((_,i)=>{
+  const dot=document.createElement('button'),open=i<=maxUnlocked;
+  dot.type='button';dot.className=`dot ${open?'on':''} ${i===levelIndex?'current':''}`;dot.title=`Nivel ${i+1}`;dot.disabled=!open;
+  dot.setAttribute('aria-label',open?`Ir al nivel ${i+1}`:`Nivel ${i+1}, bloqueado`);if(i===levelIndex)dot.setAttribute('aria-current','step');
+  dot.addEventListener('click',()=>{if(i===levelIndex)return;levelIndex=i;lastStart=null;render();prog.children[i].focus()});
+  prog.append(dot);
+ });
+}
+function center(x,y){const c=board.children[y*5+x];const a=c.getBoundingClientRect(),b=wrap.getBoundingClientRect();return{x:a.left-b.left+a.width/2,y:a.top-b.top+a.height/2}}
+function projectile(path,pieces){const from=pieces[path.from],c1=center(from.x,from.y);const c2=path.to!==null?center(pieces[path.to].x,pieces[path.to].y):center(path.endX,path.endY);return[c1,c2]}
+function beam(path,pieces,duration,id){
+ if(id!==epoch)return Promise.resolve(false);
+ duration*=pace;const [a,b]=projectile(path,pieces),ns='http://www.w3.org/2000/svg';
+ const tint=pieces[path.from].t==='line'?'#65cfff':pieces[path.from].t==='double'?'#cf9bff':'#ffc477';
+ fx.setAttribute('viewBox',`0 0 ${wrap.clientWidth} ${wrap.clientHeight}`);fx.classList.add('active');
+ const len=Math.hypot(b.x-a.x,b.y-a.y),line=document.createElementNS(ns,'line'),head=document.createElementNS(ns,'circle');
+ line.setAttribute('x1',a.x);line.setAttribute('y1',a.y);line.setAttribute('x2',b.x);line.setAttribute('y2',b.y);line.setAttribute('stroke',tint);line.setAttribute('stroke-width','4');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-dasharray',`${len} ${len}`);line.setAttribute('stroke-dashoffset',len);line.style.filter=`drop-shadow(0 0 5px ${tint})`;
+ head.setAttribute('r','5');head.setAttribute('cx',a.x);head.setAttribute('cy',a.y);head.setAttribute('fill','#ffffff');head.style.filter=`drop-shadow(0 0 7px ${tint})`;
+ fx.append(line,head);
+
+ const lineAnim=line.animate([{strokeDashoffset:String(len),opacity:.45},{strokeDashoffset:'0',opacity:1}],{duration,easing:'linear',fill:'forwards'});
+ const headAnim=head.animate([{transform:'translate(0px, 0px)'},{transform:`translate(${b.x-a.x}px, ${b.y-a.y}px)`}],{duration,easing:'ease-in-out',fill:'forwards'});
+ return new Promise(resolve=>{const t=setTimeout(()=>{lineAnim.cancel();headAnim.cancel();line.setAttribute('stroke-dashoffset','0');head.remove();resolve(id===epoch)},duration);timers.push(t)});
+}
+async function play(start){
+ document.getElementById('teachingBubble').hidden=true;document.querySelectorAll('.firstPlayTarget').forEach(el=>el.classList.remove('firstPlayTarget'));
+ if(busy||finished||start===null||start===undefined)return;
+ lastStart=start;lastRot=currentRot;dismissOverlay();document.getElementById('replay').hidden=true;busy=true;
+ const id=epoch,l=levels[levelIndex],pieces=currentPieces.map(p=>({...p})),result=simulate(pieces,start);
+ setStatus('Cargando energía…','Toca la pieza otra vez para acelerar');
+ // The initial charge is a deliberate 1.15-second anticipation, except when skipped.
+ const starter=tile(start);let skipCharge=null;
+ if(starter){starter.classList.add('charging');const halo=document.createElement('span');halo.className='chargeHalo';starter.parentElement.append(halo);buzz(25);chargeSound();}
+ let skipped=false;
+ const skip=()=>{skipped=true};if(starter){starter.addEventListener('click',skip,{once:true});skipCharge=skip}
+ for(let t=0;t<1150&&!skipped;t+=50){if(!await sleep(50/pace,id))return}
+ if(starter){starter.classList.remove('charging');starter.removeEventListener('click',skipCharge);const h=starter.parentElement.querySelector('.chargeHalo');if(h)h.remove()}
+ if(id!==epoch)return;
+ setStatus('¡Reacción en cadena!','Sigue los disparos de energía');
+ let stepCount=0;
+ for(const group of result.sequence){
+  if(id!==epoch)return;
+  for(const i of group.activated){const el=tile(i);if(el){el.classList.add('primed');el.disabled=true}}
+  if(!await sleep(130,id))return;
+  for(const i of group.activated){const el=tile(i);if(el){el.classList.remove('primed');el.classList.add('activating');el.parentElement.classList.add('flash');active.add(i);impact(i,pieces);buzz(12)}}
+  count.textContent=`${pieces.length-active.size} restantes`;
+  if(!await sleep(200,id))return;
+  for(const i of group.activated){const el=tile(i);if(el)el.classList.add('done')}
+  // Laser pulses terminate on an actual target. Empty rays do not create phantom beams.
+  const hits=group.paths.filter(p=>p.to!==null);
+  hits.forEach(p=>laser(stepCount++,pieces[p.from].t));
+  await Promise.all(hits.map(p=>beam(p,pieces,Math.max(245,Math.min(490,220+(Math.abs(pieces[p.to].x-pieces[p.from].x)+Math.abs(pieces[p.to].y-pieces[p.from].y))*58)),id)));
+  if(id!==epoch)return;
+  if(!await sleep(80,id))return;
+  fx.replaceChildren();
+ }
+ if(id!==epoch)return;
+ finished=true;busy=false;document.getElementById('replay').hidden=false;
+ const last=result.sequence.at(-1)?.activated||[];
+ if(result.won){
+  finalEffect(last,pieces);
+  if(!await sleep(350,id))return;
+  celebrate();setStatus('¡Tablero limpio! ✨','¡Una reacción perfecta!');
+  if(levelIndex<levels.length-1){maxUnlocked=Math.max(maxUnlocked,levelIndex+1);try{localStorage.setItem('chain-reaction-unlocked',String(maxUnlocked))}catch(e){}renderProgress();document.getElementById('next').hidden=false}
+  if(!await sleep(590,id))return;
+  showOverlay(true,0);
+ }else{
+  const remain=pieces.length-result.count;
+  // Shake only the pieces that survived the failed attempt.
+  for(let i=0;i<pieces.length;i++){if(!active.has(i)){const el=tile(i);if(el)el.parentElement.classList.add('survivor')}}
+  failSound();buzz([30,70,28]);setStatus(`Quedaron ${remain} piezas`,'Busca otro inicio');
+  if(!await sleep(850,id))return;
+  showOverlay(false,remain);
+ }
+}
+
+function restoreRotation(rot){const ri=levels[levelIndex].rotIndex;if(ri===undefined)return;currentRot=rot;currentPieces[ri].d=rot;paintRotatable()}
+function updatePhaseUI(){
+ const l=levels[levelIndex], btn=document.getElementById('phaseButton'),hint=document.getElementById('phaseHint');
+ if(l.rotIndex===undefined)return;
+ btn.textContent=phase==='prepare'?'¡Estoy listo! →':'← Ajustar';
+ hint.textContent=phase==='prepare'?'↻ Preparar: toca Twist para girarla.':'⚡ Disparar: toca cualquier pieza, incluida Twist.';
+ document.querySelectorAll('.piece').forEach(b=>{b.disabled=busy||finished;if(!busy&&!finished){b.setAttribute('aria-label',phase==='prepare'?(Number(b.dataset.index)===l.rotIndex?'Girar pieza Twist':'Pieza fija, pulsa listo para disparar'):'Disparar desde esta pieza')}});
+}
+document.getElementById('phaseButton').addEventListener('click',()=>{
+ if(busy||finished)return;
+ phase=phase==='prepare'?'fire':'prepare';updatePhaseUI();
+ setStatus(phase==='prepare'?'Ajusta tu solución':'¡Listo para disparar!',phase==='prepare'?'Gira Twist y cuando estés listo vuelve a disparar.':'Toca cualquier pieza para iniciar la cadena');
+});
+document.getElementById('paceButton').addEventListener('click',()=>{pace=pace===1.5?1:1.5;document.getElementById('paceButton').textContent=pace===1.5?'Muy lenta · visible':'Lenta · visible'});
+document.getElementById('retry').addEventListener('click',()=>{lastStart=null;render()});
+document.getElementById('replay').addEventListener('click',()=>{if(lastStart===null)return;const s=lastStart,rot=lastRot;render();restoreRotation(rot);play(s)});
+function paintSound(){const el=document.getElementById('sound');el.textContent=soundOn?'♫ Sonido: encendido':'♫ Sonido: apagado';el.setAttribute('aria-pressed',String(soundOn))}
+document.getElementById('sound').addEventListener('click',()=>{soundOn=!soundOn;paintSound();try{localStorage.setItem('chain-reaction-sound',soundOn?'on':'off')}catch(e){}if(soundOn)laser(0)});
+document.getElementById('haptic').addEventListener('click',()=>{hapticOn=!hapticOn;const b=document.getElementById('haptic');b.textContent=hapticOn?'◉ Vibración: activa':'◯ Vibración: apagada';b.setAttribute('aria-pressed',String(hapticOn))});
+document.getElementById('prev').addEventListener('click',()=>{if(levelIndex>0){levelIndex--;lastStart=null;render()}});
+document.getElementById('next').addEventListener('click',()=>{if(levelIndex<levels.length-1&&levelIndex+1<=maxUnlocked){levelIndex++;lastStart=null;render()}});
+paintSound();
+render();
+</script></body></html>
