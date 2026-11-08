@@ -6,8 +6,10 @@ y usa las estrellas para devolverle la luz al pueblo.
 No necesita compilación: abre `index.html` con cualquier servidor estático.
 
 - `js/engine.js`: reglas puras, sin DOM.
-- `js/levels.js`: niveles generados. No editar a mano.
+- `js/levels.js`: tutorial, niveles y retos generados. No editar a mano.
+  Los niveles con cristal tienen dos soluciones; solo una pasa por el cristal.
 - `js/art.js`, `js/village.js`: arte SVG. `js/audio.js`: sonido sintetizado.
+- `js/map.js`: mapa del mundo (campamento, pueblos, niveles y pueblos futuros).
 - `js/game.js`: pantallas, recompensas y guardado.
 
 Para cambiar niveles, edita `tools/generate-levels.js` y ejecuta:

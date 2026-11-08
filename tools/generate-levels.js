@@ -15,8 +15,8 @@ function rng(seed) {
 }
 const P = (x, y, t, d = 0, g) => (g ? { x, y, t, d, g: 1 } : { x, y, t, d });
 
-// Niveles de enseñanza, hechos a mano. Cada uno introduce una sola idea.
-const HAND = [
+// Tutorial, hecho a mano. Cada paso introduce una sola idea y no da premios.
+const TUTORIAL = [
   { size: 5, rocks: [], pieces: [P(0, 2, 'line', 0), P(2, 2, 'line', 0), P(4, 2, 'line', 0)] },
   { size: 5, rocks: [], pieces: [P(0, 0, 'line', 0), P(2, 0, 'line', 1), P(2, 2, 'line', 0), P(4, 2, 'line', 3)] },
   { size: 5, rocks: [], pieces: [P(2, 2, 'double', 0), P(0, 2, 'line', 3), P(4, 2, 'line', 3), P(0, 0, 'line', 0), P(4, 0, 'line', 2)] },
@@ -24,14 +24,16 @@ const HAND = [
   { size: 5, rocks: [], pieces: [P(2, 2, 'bomb'), P(0, 2, 'line', 3), P(4, 2, 'line', 1), P(2, 0, 'double', 0), P(2, 4, 'double', 0), P(0, 0, 'line', 1), P(4, 0, 'line', 1), P(0, 4, 'line', 0), P(4, 4, 'line', 2)] },
   // Primer giro: la dorada mira al lado equivocado.
   { size: 5, rocks: [], pieces: [P(0, 1, 'line', 0), P(3, 1, 'line', 2, true), P(3, 4, 'line', 2)] },
+  // Las rocas cortan la cadena: solo empezando abajo a la izquierda llega a todos.
+  { size: 5, rocks: [[1, 4]], pieces: [P(0, 0, 'line', 0), P(3, 0, 'line', 1), P(3, 4, 'line', 2), P(0, 4, 'line', 3)] },
 ];
 
 const TIERS = [
-  { count: 4, size: 5, pieces: [4, 6], golds: [1, 1], rocks: [0, 0], dbl: .25, bomb: 0, minWaves: 3 },
-  { count: 6, size: 5, pieces: [6, 8], golds: [1, 1], rocks: [1, 2], dbl: .3, bomb: .05, minWaves: 4 },
-  { count: 8, size: 5, pieces: [7, 9], golds: [1, 2], rocks: [1, 2], dbl: .3, bomb: .1, minWaves: 4 },
-  { count: 8, size: 6, pieces: [8, 10], golds: [1, 2], rocks: [2, 3], dbl: .3, bomb: .1, minWaves: 5 },
-  { count: 8, size: 6, pieces: [10, 13], golds: [2, 2], rocks: [2, 4], dbl: .3, bomb: .12, minWaves: 5 },
+  { count: 4, gems: 0, size: 5, pieces: [4, 6], golds: [1, 1], rocks: [0, 0], dbl: .25, bomb: 0, minWaves: 3 },
+  { count: 6, gems: 1, size: 5, pieces: [6, 8], golds: [1, 1], rocks: [1, 2], dbl: .3, bomb: .05, minWaves: 4 },
+  { count: 8, gems: 2, size: 5, pieces: [7, 9], golds: [1, 2], rocks: [1, 2], dbl: .3, bomb: .1, minWaves: 4 },
+  { count: 8, gems: 2, size: 6, pieces: [8, 10], golds: [1, 2], rocks: [2, 3], dbl: .3, bomb: .1, minWaves: 5 },
+  { count: 8, gems: 2, size: 6, pieces: [10, 13], golds: [2, 2], rocks: [2, 4], dbl: .3, bomb: .12, minWaves: 5 },
 ];
 const DAILY = { size: 6, pieces: [9, 12], golds: [1, 2], rocks: [2, 3], dbl: .3, bomb: .1, minWaves: 5 };
 
@@ -61,7 +63,16 @@ function grow(r, cfg, total) {
   return pieces.length === total ? pieces : null;
 }
 
-function attempt(r, cfg) {
+// Casillas que cruza cualquier rayo de una solución, incluidos los que se pierden.
+function rayCells(level, sol) {
+  const pieces = level.pieces.map(p => ({ ...p }));
+  for (const [i, d] of sol.dirs) pieces[i].d = d;
+  const out = new Set();
+  for (const w of simulate(pieces, sol.start, level.size, level.rocks).sequence) for (const p of w.paths) for (const c of p.cells) out.add(c.join());
+  return out;
+}
+
+function attempt(r, cfg, gemMode) {
   const pieces = grow(r, cfg, between(r, cfg.pieces));
   if (!pieces) return null;
   const full = simulate(pieces, 0, cfg.size, []);
@@ -91,7 +102,21 @@ function attempt(r, cfg) {
   const level = { size: cfg.size, pieces, rocks, coins };
   const solution = golds.map(i => [i, pieces[i].d]);
   const sols = solve(level);
-  if (sols.length !== 1 || sols[0].start !== 0) return null;
+  let hintSol = { start: 0, dirs: solution }, gem = null;
+  if (!gemMode) {
+    if (sols.length !== 1 || sols[0].start !== 0) return null;
+  } else {
+    // Exactamente dos soluciones; el cristal queda en el camino de la más larga.
+    if (sols.length !== 2) return null;
+    const waves = s => { const p = level.pieces.map(x => ({ ...x })); for (const [i, d] of s.dirs) p[i].d = d; return simulate(p, s.start, cfg.size, rocks).sequence.length; };
+    const [hard, easy] = waves(sols[0]) >= waves(sols[1]) ? sols : [sols[1], sols[0]];
+    const taken = new Set(pieces.map(p => p.x + ',' + p.y).concat(rocks.map(c => c.join()), coins.map(c => c.join())));
+    const easyCells = rayCells(level, easy);
+    const only = [...rayCells(level, hard)].filter(c => !easyCells.has(c) && !taken.has(c));
+    if (!only.length) return null;
+    gem = only[Math.floor(r() * only.length)].split(',').map(Number);
+    hintSol = easy;
+  }
 
   // Desordena las doradas: la orientación inicial no puede resolver el nivel.
   const shuffled = level.pieces.map(p => ({ ...p }));
@@ -100,7 +125,7 @@ function attempt(r, cfg) {
     shuffled[i].d = opts[Math.floor(r() * opts.length)];
     if (shuffled[i].t === 'double' && shuffled[i].d % 2 === d % 2) shuffled[i].d = (d + 1) % 4;
   }
-  if (simulate(shuffled, 0, cfg.size, rocks).won) return null;
+  if (shuffled.some((p, i) => !p.g && simulate(shuffled, i, cfg.size, rocks).won)) return null;
 
   // Exige señuelos: otro inicio debe parecer prometedor (o no hay decisión real).
   let decoys = 0;
@@ -114,20 +139,22 @@ function attempt(r, cfg) {
   for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
   const out = order.map(i => shuffled[i]);
   const remap = i => order.indexOf(i);
-  return {
+  const lvl = {
     size: cfg.size, rocks, coins, pieces: out,
-    sol: { start: remap(0), dirs: solution.map(([i, d]) => [remap(i), d]) },
+    sol: { start: remap(hintSol.start), dirs: hintSol.dirs.map(([i, d]) => [remap(i), d]) },
     weight: out.length * 2 + full.sequence.length + golds.length * 3 + decoys,
   };
+  if (gem) lvl.gem = gem;
+  return lvl;
 }
 
-function batch(r, cfg, count) {
+function batch(r, cfg, count, gems = 0) {
   const found = [];
   const seen = new Set();
   let tries = 0;
   while (found.length < count) {
-    if (++tries > 4e6) throw new Error('Sin niveles suficientes: ' + JSON.stringify(cfg));
-    const lvl = attempt(r, cfg);
+    if (++tries > 8e6) throw new Error('Sin niveles suficientes: ' + JSON.stringify(cfg));
+    const lvl = attempt(r, cfg, found.length < gems);
     if (!lvl) continue;
     const key = JSON.stringify(lvl.pieces);
     if (seen.has(key)) continue;
@@ -138,16 +165,14 @@ function batch(r, cfg, count) {
 }
 
 const r = rng(20261107);
-const hand = HAND.map(l => {
+const tutorial = TUTORIAL.map(l => {
   const sols = solve({ ...l, coins: [] });
-  if (sols.length !== 1) throw new Error('Nivel a mano sin solución única');
+  if (sols.length !== 1) throw new Error('Paso de tutorial sin solución única');
   return { ...l, coins: [], sol: sols[0] };
 });
-hand[1].coins = [[1, 0]];
-hand[5].coins = [[1, 1], [2, 1]];
-const levels = hand.concat(...TIERS.map(t => batch(r, t, t.count)));
+const levels = [].concat(...TIERS.map(t => batch(r, t, t.count, t.gems)));
 const daily = batch(r, DAILY, 30).sort(() => r() - .5);
 const strip = ({ weight, ...l }) => l;
-const body = 'window.CR_LEVELS=' + JSON.stringify({ levels: levels.map(strip), daily: daily.map(strip) }) + ';\n';
+const body = 'window.CR_LEVELS=' + JSON.stringify({ tutorial, levels: levels.map(strip), daily: daily.map(strip) }) + ';\n';
 fs.writeFileSync(path.join(__dirname, '..', 'js', 'levels.js'), '// Generado por tools/generate-levels.js. No editar a mano.\n' + body);
-console.log(`${levels.length} niveles, ${daily.length} retos diarios`);
+console.log(`${tutorial.length} pasos de tutorial, ${levels.length} niveles (${levels.filter(l => l.gem).length} con cristal), ${daily.length} retos diarios`);

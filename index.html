@@ -20,31 +20,44 @@
 </defs></svg>
 
 <div id="app">
-  <section id="home" class="screen" hidden>
-    <div id="scene" class="scene"></div>
+  <section id="map" class="screen" hidden>
+    <div class="mapScroll" id="mapScroll"><div id="mapInner"></div></div>
     <header class="hud">
-      <div class="chip" aria-label="Estrellas"><span data-icon="star"></span><b id="homeStars">0</b></div>
-      <div class="chip" aria-label="Monedas"><span data-icon="coin"></span><b id="homeCoins">0</b></div>
+      <div class="chip" aria-label="Estrellas"><span data-icon="star"></span><b class="nStars">0</b></div>
+      <div class="chip" aria-label="Monedas"><span data-icon="coin"></span><b class="nCoins">0</b></div>
+      <div class="chip" aria-label="Cristales"><span data-icon="gem"></span><b class="nGems">0</b></div>
       <button class="round" id="openSettings" aria-label="Ajustes"><span data-icon="gear"></span></button>
     </header>
-    <h1 class="logo"><span>CHAIN</span><span>REACTION</span></h1>
-    <div class="homeBottom">
+    <div class="mapBottom">
       <div class="sideBtns">
         <button class="tool" id="openGift"><span data-icon="gift"></span>Regalo<i id="giftDot" class="dot" hidden></i></button>
         <button class="tool" id="openDaily"><span data-icon="bolt"></span>Reto<i id="dailyDot" class="dot" hidden></i></button>
         <button class="tool" id="openAlbum"><span data-icon="heart"></span>Amigos</button>
-        <button class="tool" id="openLevels"><span data-icon="grid"></span>Niveles</button>
+        <button class="tool" id="openVillage"><span data-icon="home"></span>Pueblo<i id="buildDot" class="dot" hidden></i></button>
       </div>
-      <button class="buildCard" id="build"></button>
       <button class="big green" id="play"></button>
+    </div>
+  </section>
+
+  <section id="village" class="screen" hidden>
+    <div id="scene" class="scene"></div>
+    <header class="hud">
+      <button class="round" id="villageBack" aria-label="Volver al mapa"><span data-icon="map"></span></button>
+      <div class="chip" aria-label="Estrellas"><span data-icon="star"></span><b class="nStars">0</b></div>
+      <div class="chip" aria-label="Monedas"><span data-icon="coin"></span><b class="nCoins">0</b></div>
+    </header>
+    <h1 class="townTitle" id="townTitle"></h1>
+    <div class="homeBottom">
+      <button class="buildCard" id="build"></button>
+      <button class="big green" id="toMap">Ir al mapa</button>
     </div>
   </section>
 
   <section id="game" class="screen" hidden>
     <header class="hud">
-      <button class="round" id="back" aria-label="Volver al pueblo"><span data-icon="home"></span></button>
+      <button class="round" id="back" aria-label="Volver al mapa"><span data-icon="home"></span></button>
       <div class="levelBox"><b id="levelName"></b><div id="liveStars" class="liveStars"></div></div>
-      <div class="chip" aria-label="Monedas"><span data-icon="coin"></span><b id="gameCoins">0</b></div>
+      <div class="chip" aria-label="Monedas"><span data-icon="coin"></span><b class="nCoins">0</b></div>
     </header>
     <div class="say" id="say"><div class="sayFace" id="sayFace"></div><p id="sayText"></p></div>
     <div class="boardWrap" id="boardWrap">
@@ -68,6 +81,7 @@
 <script src="js/art.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/village.js"></script>
+<script src="js/map.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>

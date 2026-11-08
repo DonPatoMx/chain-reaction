@@ -59,7 +59,10 @@
     home: line('<path d="M6 23L24 7l18 16M12 19v22h24V19M20 41V29h8v12"/>'),
     undo: line('<path d="M12 8v12h12"/><path d="M12 20c4-7 10-10 16-9 9 2 14 10 12 18-2 9-11 13-19 11-4-1-7-3-9-6"/>'),
     bulb: line('<path d="M16 32c-5-3-8-8-8-13C8 11 15 5 24 5s16 6 16 14c0 5-3 10-8 13v4H16ZM18 43h12"/>'),
-    turn: `<svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="#7a4a00" stroke-width="5.500" stroke-linecap="round" stroke-linejoin="round"><path d="M38 24a14 14 0 1 1-5-11"/><path d="M34 3v11h-11" transform="translate(1 -1)"/></svg>`,
+    gem: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 6h20l10 12-20 25L4 18Z" fill="#5fe0ff" stroke="#1a8fc4" stroke-width="3" stroke-linejoin="round"/><path d="M4 18h40M14 6l10 37M34 6L24 43M14 6l-2 12M34 6l2 12" fill="none" stroke="#1a8fc4" stroke-width="2" opacity=".55"/><path d="M15 10l-4 6" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>',
+    lock: line('<rect x="10" y="21" width="28" height="21" rx="5" fill="currentColor"/><path d="M16 21v-6a8 8 0 0 1 16 0v6"/>'),
+    map: line('<path d="M5 11l12-5 14 5 12-5v31l-12 5-14-5-12 5ZM17 6v31M31 11v31"/>'),
+        turn: `<svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="#7a4a00" stroke-width="5.500" stroke-linecap="round" stroke-linejoin="round"><path d="M38 24a14 14 0 1 1-5-11"/><path d="M34 3v11h-11" transform="translate(1 -1)"/></svg>`,
     hand: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M26 6c3 0 5 2 5 5v18l3-1c3 0 4 1 5 2 2-1 5 0 6 2 3-1 6 1 6 4v10c0 8-6 14-14 14h-5c-5 0-9-3-12-7L12 40c-2-3 2-7 5-4l4 4V11c0-3 2-5 5-5Z" fill="#fff" stroke="#3a2a55" stroke-width="3" stroke-linejoin="round"/></svg>`,
   };
 

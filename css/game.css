@@ -17,7 +17,6 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;borde
 .liveStars{display:flex;justify-content:center;gap:1px;font-size:15px;margin-top:3px}
 
 /* Pueblo */
-#home{padding-bottom:calc(14px + env(safe-area-inset-bottom))}
 .scene{position:absolute;inset:0 0 214px}.scene svg{width:100%;height:100%;display:block;overflow:visible}
 .scene .glow{filter:drop-shadow(0 0 7px #ffe27a)}
 .scene .spin{animation:spin 9s linear infinite}.scene .spin.slow{animation-duration:22s}
@@ -25,10 +24,9 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;borde
 .scene .pop{transform-box:fill-box;transform-origin:50% 100%}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes popIn{from{transform:scale(.5);opacity:.3}to{transform:none;opacity:1}}
-.logo{position:relative;z-index:1;margin:0;text-align:center;font-weight:700;line-height:.9;font-size:clamp(30px,10vw,44px);color:#fff;letter-spacing:.01em;text-shadow:0 4px 0 #ff7a59,0 8px 0 #0002}
-.logo span{display:block}.logo span+span{color:#ffe27a;text-shadow:0 4px 0 #e8840c,0 8px 0 #0002}
 .homeBottom{position:relative;z-index:1;margin-top:auto;display:flex;flex-direction:column;gap:10px}
 .sideBtns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.homeBottom{position:relative;z-index:1;margin-top:auto;display:flex;flex-direction:column;gap:10px}
 .tool{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--cream);border-radius:16px;padding:8px 4px 7px;font-size:13px;font-weight:600;box-shadow:0 4px 0 #0002}
 .tool:active,.big:active,.round:active{transform:translateY(3px);box-shadow:0 1px 0 #0002}
 .tool .ic{font-size:21px;color:#7a5ad6}
@@ -116,3 +114,51 @@ button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;borde
 .confetti{position:absolute;top:-16px;width:10px;height:15px;border-radius:2px;animation:fall 1.6s ease-in forwards}
 @keyframes fall{to{transform:translate(var(--x),105dvh) rotate(var(--r))}}
 @media(prefers-reduced-motion:reduce){.boardWrap.shake,.piece>svg,.scene .spin,.buildCard.ready,.coin{animation:none}}
+
+/* Mapa */
+#map{padding:0;gap:0}
+#map .hud{position:absolute;top:0;left:0;right:0;padding:calc(10px + env(safe-area-inset-top)) 14px 0;justify-content:flex-start}
+#map .hud .round{margin-left:auto}
+.mapScroll{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;background:#8fdc8a}
+.worldMap{display:block;width:100%;height:auto}
+.mapBottom{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;flex-direction:column;gap:10px;padding:26px 14px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#0003 30%)}
+.worldMap [data-node]{cursor:pointer;outline:none}
+.worldMap .node .disc{fill:#fff8ec;stroke:#fff;stroke-width:4}
+.worldMap .node.done .disc{fill:#ffc928;stroke:#fff}
+.worldMap .node.current .disc{fill:#4ed06b;stroke:#fff;stroke-width:5}
+.worldMap .node.locked .disc{fill:#d9d2e6;stroke:#fff8}
+.worldMap .num{font:700 21px Fredoka,sans-serif;text-anchor:middle;fill:#7a4a00}
+.worldMap .node.current .num{fill:#fff}.worldMap .node.locked .num{fill:#9a90ad}
+.worldMap .ring{fill:none;stroke:#fff;stroke-width:4;transform-box:fill-box;transform-origin:center;animation:ring 1.4s ease-out infinite}
+@keyframes ring{from{opacity:.9;transform:scale(.9)}to{opacity:0;transform:scale(1.5)}}
+.worldMap .node.current{animation:bob 1.2s ease-in-out infinite}
+@keyframes bob{50%{translate:0 -4px}}
+.worldMap [data-node]:focus-visible .disc{stroke:#3a2a55;stroke-width:5}
+.worldMap .label{font:600 14px Fredoka,sans-serif;text-anchor:middle;fill:#3a2a55}
+.worldMap .banner{font:700 18px Fredoka,sans-serif;text-anchor:middle;fill:#fff}
+.worldMap .townSub{font:600 15px Fredoka,sans-serif;text-anchor:middle;fill:#a85a00}
+.worldMap .soonText{font:500 14px Fredoka,sans-serif;text-anchor:middle;fill:#ffe27a;letter-spacing:.06em}
+.worldMap .town:hover rect:first-child,.worldMap .town:focus-visible rect:first-child{stroke:#ffe27a}
+
+/* Pueblo */
+.townTitle{position:relative;z-index:1;margin:4px 0 0;text-align:center;font-size:32px;font-weight:700;color:#fff;text-shadow:0 3px 0 #ff7a59,0 6px 0 #0002}
+#village .hud{justify-content:flex-start}#village .hud .round:first-child{margin-right:auto}
+
+/* Partida: progreso del tutorial, cristales */
+.liveStars .step{width:9px;height:9px;border-radius:50%;background:#ffffff66;margin:2px 2px 0}
+.liveStars .step.on{background:#ffe27a}.liveStars .step.now{background:#fff;box-shadow:0 0 0 2px #ffe27a}
+.gem{display:block;width:62%;height:62%;animation:float 1.6s ease-in-out infinite;filter:drop-shadow(0 0 6px #5fe0ff)}.gem svg{display:block;width:100%;height:100%}
+.gem.taken{animation:take .5s ease-out forwards}
+
+/* Hojas: pago, avisos */
+.bigStars.small .ic{font-size:40px}.bigStars.small .ic:nth-child(2){font-size:48px}
+.payRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 10px}
+.pay{display:flex;flex-direction:column;align-items:center;gap:2px;background:#f2e6d4;border-radius:16px;padding:12px 6px;box-shadow:0 4px 0 #0001}
+.pay .ic{font-size:30px}.pay b{font-size:22px}.pay small{font-size:12px;color:#7a6a90}
+.pay:not(:disabled){background:#fff3b8;box-shadow:0 4px 0 #e8c25a}.pay:disabled{opacity:.5}
+.fine{font-size:14px}.gemNote{display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;color:#1a6f9c!important}
+.gemWin{color:#1a8fc4}
+.diploma{width:110px;height:110px;margin:0 auto;animation:rise .5s}.diploma svg{width:100%;height:100%}
+.toast{position:absolute;left:50%;top:38%;z-index:25;transform:translateX(-50%);background:#fff8ec;color:var(--ink);padding:12px 22px;border-radius:99px;font-size:22px;font-weight:700;box-shadow:0 5px 0 #0003;pointer-events:none;animation:toast 1.1s ease-out forwards;white-space:nowrap}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.05)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-14px)}}
+@media(prefers-reduced-motion:reduce){.worldMap .ring,.worldMap .node.current,.gem{animation:none}}
