@@ -13,3 +13,5 @@ No necesita compilación: abre `index.html` con cualquier servidor estático.
 Para cambiar niveles, edita `tools/generate-levels.js` y ejecuta:
 
     node tools/generate-levels.js && node tools/check-levels.js
+
+Cada `git push` a `main` se publica automáticamente en https://chain-reaction-iq.vercel.app.
